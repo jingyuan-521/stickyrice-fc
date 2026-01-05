@@ -29,3 +29,13 @@ export function clearLastName(): void {
     localStorage.removeItem(LAST_NAME_KEY)
   }
 }
+
+/**
+ * Check if the current user is logged in as admin
+ */
+export function isAdmin(): boolean {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('admin_auth') === 'true'
+  }
+  return false
+}

@@ -5,7 +5,16 @@ import Toast from './Toast'
 import ConfirmModal from './ConfirmModal'
 import { useToast } from '../lib/useToast'
 
-const ADMIN_PASSWORD = 'StickyRice!Mon2026' // Stronger password: Capital letters, special char, numbers
+const DEFAULT_ADMIN_PASSWORD = 'StickyRice!Mon2026' // Default password
+const ADMIN_PASSWORD_KEY = 'admin_password'
+
+// Get current admin password from localStorage or use default
+function getAdminPassword(): string {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_ADMIN_PASSWORD
+  }
+  return DEFAULT_ADMIN_PASSWORD
+}
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -23,6 +32,10 @@ export default function AdminPanel() {
   const [loginError, setLoginError] = useState(false)
   const [uploadingQR, setUploadingQR] = useState(false)
   const [uploadingGameQR, setUploadingGameQR] = useState(false)
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const { toasts, removeToast, success, error: showError } = useToast()
   const [formData, setFormData] = useState({
     week_start_date: '',
@@ -46,7 +59,7 @@ export default function AdminPanel() {
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
+    if (password === getAdminPassword()) {
       setIsAuthenticated(true)
       localStorage.setItem('admin_auth', 'true')
       success('Welcome, Admin!')
@@ -55,6 +68,38 @@ export default function AdminPanel() {
       showError('Incorrect password')
       setPassword('')
     }
+  }
+
+  function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+
+    // Verify current password
+    if (currentPassword !== getAdminPassword()) {
+      showError('Current password is incorrect')
+      return
+    }
+
+    // Validate new password
+    if (newPassword.length < 8) {
+      showError('New password must be at least 8 characters')
+      return
+    }
+
+    // Check if passwords match
+    if (newPassword !== confirmPassword) {
+      showError('New passwords do not match')
+      return
+    }
+
+    // Save new password
+    localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword)
+    success('Password changed successfully!')
+
+    // Reset form
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setShowPasswordChange(false)
   }
 
   useEffect(() => {
@@ -487,6 +532,15 @@ export default function AdminPanel() {
             </svg>
             Announcements
           </button>
+          <button
+            onClick={() => setShowPasswordChange(!showPasswordChange)}
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg transition flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Change Password
+          </button>
         </div>
 
         {showSettings && gameSettings && (
@@ -733,6 +787,81 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {showPasswordChange && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Change Admin Password</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Update your admin password. Make sure to use a strong password with at least 8 characters.
+            </p>
+
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  required
+                  minLength={8}
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transition-all"
+                >
+                  Change Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordChange(false)
+                    setCurrentPassword('')
+                    setNewPassword('')
+                    setConfirmPassword('')
+                  }}
+                  className="px-6 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         )}
 

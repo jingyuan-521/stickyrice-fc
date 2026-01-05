@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { getLastName } from '../lib/storage'
+import { getLastName, isAdmin } from '../lib/storage'
 import type { Week, Photo } from '../types'
 import CommentsSection from './CommentsSection'
 import Toast from './Toast'
@@ -178,34 +178,41 @@ export default function AlbumTab({ week }: AlbumTabProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {photos.map((photo) => (
-              <div
-                key={photo.id}
-                className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer group shadow-md hover:shadow-xl transition-all"
-                onClick={() => setViewingPhoto(photo.image_url)}
-              >
-                <img
-                  src={photo.image_url}
-                  alt={`Uploaded by ${photo.uploaded_by}`}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs p-2 sm:p-3">
-                  <p className="font-semibold truncate">{photo.uploaded_by}</p>
-                </div>
-                <div className="absolute inset-0 bg-[#6c4dc0]/0 group-hover:bg-[#6c4dc0]/10 transition-colors duration-300" />
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setDeleteConfirm(photo)
-                  }}
-                  className="absolute top-2 right-2 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg font-bold z-10"
-                  title="Delete photo"
+            {photos.map((photo) => {
+              const isOwner = getLastName() === photo.uploaded_by
+              const canDelete = isOwner || isAdmin()
+
+              return (
+                <div
+                  key={photo.id}
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer group shadow-md hover:shadow-xl transition-all"
+                  onClick={() => setViewingPhoto(photo.image_url)}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
+                  <img
+                    src={photo.image_url}
+                    alt={`Uploaded by ${photo.uploaded_by}`}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs p-2 sm:p-3">
+                    <p className="font-semibold truncate">{photo.uploaded_by}</p>
+                  </div>
+                  <div className="absolute inset-0 bg-[#6c4dc0]/0 group-hover:bg-[#6c4dc0]/10 transition-colors duration-300" />
+                  {canDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setDeleteConfirm(photo)
+                      }}
+                      className="absolute top-2 right-2 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg font-bold z-10"
+                      title="Delete photo"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

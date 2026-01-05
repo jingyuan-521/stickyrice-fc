@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { getLastName } from '../lib/storage'
+import { getLastName, isAdmin } from '../lib/storage'
 import type { Week, Comment } from '../types'
 import Toast from './Toast'
 import ConfirmModal from './ConfirmModal'
@@ -114,6 +114,7 @@ export default function CommentsSection({ week }: CommentsSectionProps) {
 
   function CommentItem({ comment, depth = 0 }: { comment: Comment; depth?: number }) {
     const isOwnComment = getLastName() === comment.player_name
+    const canDelete = isOwnComment || isAdmin()
     const maxDepth = 3 // Maximum nesting level
 
     return (
@@ -171,7 +172,7 @@ export default function CommentsSection({ week }: CommentsSectionProps) {
               )}
             </div>
 
-            {isOwnComment && (
+            {canDelete && (
               <button
                 onClick={() => setDeleteConfirm(comment.id)}
                 className="text-red-500 hover:text-red-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition shrink-0"

@@ -17,10 +17,10 @@ export default function AnnouncementBanner() {
   useEffect(() => {
     if (announcements.length <= 1) return
 
-    // Rotate announcements every 8 seconds
+    // Rotate announcements every 10 seconds
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % announcements.length)
-    }, 8000)
+    }, 10000)
 
     return () => clearInterval(timer)
   }, [announcements.length])
