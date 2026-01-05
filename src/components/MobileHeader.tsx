@@ -12,9 +12,12 @@ export default function MobileHeader({ weekDate, playerCount }: MobileHeaderProp
       <div className="p-4 flex justify-between items-center border-b border-white/10">
         <div className="flex-1"></div>
         <img
-          src="https://gllvzrjyuplairmubzbu.supabase.co/storage/v1/object/public/logo/Screenshot%202569-01-02%20at%2015.23.33.png"
+          src="https://gllvzrjyuplairmubzbu.supabase.co/storage/v1/object/public/logo/neww%20logo.png"
           alt="Sticky Rice FC"
           className="h-16 w-auto object-contain"
+          style={{
+            filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 6px white)'
+          }}
         />
         <div className="flex-1 flex justify-end">
           <a

@@ -21,9 +21,12 @@ export default function Sidebar({ activeTab, onTabChange, playerCount, weekDate 
       {/* Logo */}
       <div className="p-6 border-b border-white/10 flex justify-center">
         <img
-          src="https://gllvzrjyuplairmubzbu.supabase.co/storage/v1/object/public/logo/Screenshot%202569-01-02%20at%2015.23.33.png"
+          src="https://gllvzrjyuplairmubzbu.supabase.co/storage/v1/object/public/logo/neww%20logo.png"
           alt="Sticky Rice FC"
           className="h-20 w-auto object-contain"
+          style={{
+            filter: 'drop-shadow(0 0 3px white) drop-shadow(0 0 6px white)'
+          }}
         />
       </div>
 

@@ -22,6 +22,7 @@ export default function AdminPanel() {
   const [deleteWeekConfirm, setDeleteWeekConfirm] = useState<string | null>(null)
   const [loginError, setLoginError] = useState(false)
   const [uploadingQR, setUploadingQR] = useState(false)
+  const [uploadingGameQR, setUploadingGameQR] = useState(false)
   const { toasts, removeToast, success, error: showError } = useToast()
   const [formData, setFormData] = useState({
     week_start_date: '',
@@ -327,6 +328,37 @@ export default function AdminPanel() {
       showError(`Upload failed: ${err.message}`)
     } finally {
       setUploadingQR(false)
+    }
+  }
+
+  async function handleGameQRUpload(file: File) {
+    setUploadingGameQR(true)
+
+    try {
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `game-qr-${Date.now()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('qr-codes')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('qr-codes')
+        .getPublicUrl(filePath)
+
+      // Update form data with new QR code URL
+      setFormData({ ...formData, payment_qr_code_url: urlData.publicUrl })
+
+      success('QR code uploaded successfully!')
+    } catch (err: any) {
+      showError(`Upload failed: ${err.message}`)
+    } finally {
+      setUploadingGameQR(false)
     }
   }
 
@@ -763,15 +795,53 @@ export default function AdminPanel() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Payment QR Code URL (optional)</label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={formData.payment_qr_code_url}
-                onChange={(e) => setFormData({ ...formData, payment_qr_code_url: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <p className="text-xs text-gray-500 mt-1">Upload QR code to Supabase Storage and paste URL here</p>
+              <label className="block text-sm font-semibold mb-2">Payment QR Code (optional)</label>
+
+              {/* QR Code Preview */}
+              {formData.payment_qr_code_url && (
+                <div className="mb-3 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Current QR Code:</p>
+                  <img
+                    src={formData.payment_qr_code_url}
+                    alt="Payment QR Code"
+                    className="w-48 h-48 object-contain mx-auto border-2 border-gray-300 rounded-lg bg-white"
+                  />
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      handleGameQRUpload(file)
+                    }
+                  }}
+                  disabled={uploadingGameQR}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100 file:cursor-pointer
+                    disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                />
+              </label>
+              {uploadingGameQR && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-blue-600 font-semibold">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading QR code...
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Upload your payment QR code image for this specific game.
+              </p>
             </div>
 
             <button
